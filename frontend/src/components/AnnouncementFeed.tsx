@@ -154,6 +154,8 @@ function AnnouncementCard({ announcement, language }: {
         {/* Expand button */}
         <button
           onClick={() => setExpanded(!expanded)}
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Collapse announcement details' : 'Expand announcement details'}
           className="mt-3 flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
         >
           {expanded ? (

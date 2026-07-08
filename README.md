@@ -1,10 +1,32 @@
 # StadiumSense
 
-**Accessibility copilot for FIFA World Cup 2026 fans**
+> **Accessibility Copilot for FIFA World Cup 2026 Fans**
 
 *"Everyone hears the match — even when they can't."*
 
-StadiumSense converts live stadium announcements and match events into real-time accessible captions, translations, and haptic alerts for deaf/hard-of-hearing fans. It also provides step-free navigation and a grounded Q&A system.
+StadiumSense is a real-time accessibility platform built for the **FIFA World Cup 2026** at MetLife Stadium. It converts live stadium announcements and match events into:
+
+- ♿ **Real-time plain-language captions** for deaf/hard-of-hearing fans
+- 🌐 **7-language instant translations** (English, Hindi, Spanish, French, Arabic, Portuguese, Chinese)
+- 📳 **Haptic vibration alerts** for critical events (evacuation, medical)
+- 🗺️ **Step-free navigation** with turn-by-turn directions for wheelchair users
+- 🤖 **Grounded AI Q&A** over a stadium knowledge base (RAG + FAISS)
+
+---
+
+## Problem Statement
+
+Over **1 billion people** globally live with some form of disability. Major sporting events are still largely inaccessible — stadium announcements are audio-only, navigation is rarely step-free, and information is rarely available in local languages.
+
+StadiumSense solves this through an **AI-powered accessibility pipeline**:
+
+| Problem | StadiumSense Solution |
+|---|---|
+| PA announcements are audio-only | Real-time text captions + translations |
+| Staff can't reach all fans quickly | WebSocket broadcast to every connected device |
+| Wheelchair users don't know step-free routes | BFS pathfinding on a step-free graph + LLM narration |
+| Fans can't ask questions in their language | RAG Q&A with Claude AI, responds in user's language |
+| Emergency alerts not accessible | Full-screen urgent overlays + haptic alerts |
 
 ---
 
@@ -14,7 +36,7 @@ StadiumSense converts live stadium announcements and match events into real-time
 
 - **Backend**: Python 3.10+, `pip`
 - **Frontend**: Node.js 18+, `npm`
-- **AI**: Anthropic API key (for AI pipelines)
+- **AI**: Anthropic API key
 
 ### 1. Setup
 
@@ -22,92 +44,83 @@ StadiumSense converts live stadium announcements and match events into real-time
 # Clone and navigate
 cd stadium-sense
 
-# Backend setup
+# Backend
 cd backend
 cp ../.env.example .env
-# Edit .env with your ANTHROPIC_API_KEY
+# Edit .env — add your ANTHROPIC_API_KEY
 
-# Create virtual environment and install deps
 python -m venv venv
-.\venv\Scripts\activate  # Windows
-# or: source venv/bin/activate  # macOS/Linux
+.\venv\Scripts\activate        # Windows
+# source venv/bin/activate     # macOS/Linux
 
 pip install -r requirements.txt
 
-# Frontend setup (new terminal)
+# Frontend
 cd ../frontend
 npm install
 ```
 
 ### 2. Run
 
-**Terminal 1 - Backend:**
+**Terminal 1 — Backend:**
 ```bash
 cd backend
 .\venv\Scripts\activate
 python main.py
-# Runs on http://localhost:8000
+# → http://localhost:8000
 ```
 
-**Terminal 2 - Frontend:**
+**Terminal 2 — Frontend:**
 ```bash
 cd frontend
 npm run dev
-# Runs on http://localhost:5173
+# → http://localhost:5173
 ```
 
 ### 3. Demo
 
-1. Open http://localhost:5173 in your browser (or on phone)
-2. Select your section and language in settings
+1. Open http://localhost:5173
+2. Select your section and language in Settings
 3. Go to Staff view: http://localhost:5173/staff
-4. Click **"Run Demo"** to play the full timeline
-5. Watch the fan view at http://localhost:5173/fan
+4. Click **"Run Demo"** — plays a full match timeline (goals, crowd, medical, evacuation)
+5. Watch the fan app receive real-time accessible captions
 
 ---
 
-## Demo Script (~90 seconds)
+## Architecture
 
-| Time | Action |
-|------|--------|
-| 0:00 | Open fan phone (Priya, Hindi). Shows live feed. |
-| 0:10 | Start demo. Wayfinding + concession announcements appear as Hindi captions. |
-| 0:25 | **GOAL!** Argentina 2-1 Mexico. Celebratory card + haptic. |
-| 0:45 | Priya taps "Ask": "Nearest step-free bathroom?" → grounded answer + map route. |
-| 1:05 | Staff broadcasts "Keep aisles clear near Section 114." → appears instantly on fan phone. |
-| 1:25 | **EVACUATION DRILL** → full-screen red flash + vibration + urgent message. |
-| 1:40 | Closing tagline. |
-
----
-
-## What the GenAI Is Doing
-
-1. **Pipeline A (Announcement Transform)**:
-   - Classifies severity: `info | warning | critical`
-   - Translates to fan's language
-   - Rewrites to plain language (action-first)
-   - Generates emotional match descriptions for goals
-
-2. **Pipeline B (RAG Q&A)**:
-   - Embeds question + retrieves from stadium knowledge base
-   - Grounds answer in retrieved chunks (citations visible)
-   - Location-aware: "From Section 114, nearest step-free restroom is..."
-
-3. **Pipeline C (Route Narration)**:
-   - Pathfinds on step-free graph
-   - Generates plain-language turn-by-turn directions
+```
+┌──────────────────────────────────────────────────────────┐
+│                     Fan Device (PWA)                      │
+│  AnnouncementFeed │ StadiumMap │ ChatInterface │ Settings  │
+└───────────────────────────┬──────────────────────────────┘
+                            │  WebSocket + REST
+┌───────────────────────────▼──────────────────────────────┐
+│                  FastAPI Backend                          │
+│                                                          │
+│  Pipeline A: Announcement Transform (Claude AI)          │
+│    raw event → plain language + 7 translations           │
+│                                                          │
+│  Pipeline B: RAG Q&A (FAISS + sentence-transformers)     │
+│    question → embed → retrieve → Claude → grounded ans   │
+│                                                          │
+│  Pipeline C: Step-Free Navigation (BFS + Claude)         │
+│    start/end → BFS on step-free graph → LLM narration    │
+└──────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|------------|
-| Frontend | Vite + React + TypeScript + Tailwind + PWA |
-| Backend | FastAPI + Python |
-| AI | Anthropic Claude (structured JSON) |
+|---|---|
+| Frontend | Vite + React + TypeScript + Tailwind CSS + PWA |
+| Backend | FastAPI + Python 3.10+ |
+| AI | Anthropic Claude (Pipelines A, B, C) |
 | Embeddings | sentence-transformers + FAISS |
 | Real-time | WebSockets |
+| Testing | pytest + Vitest + @testing-library/react |
 
 ---
 
@@ -115,19 +128,21 @@ npm run dev
 
 ```
 stadium-sense/
-├── frontend/          # React PWA
+├── backend/
+│   ├── main.py              # FastAPI app — all 3 AI pipelines
+│   ├── requirements.txt
+│   └── tests/
+│       └── test_backend.py  # 35+ backend tests
+├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── hooks/
+│   │   ├── components/      # AnnouncementFeed, ChatInterface, StadiumMap, ...
+│   │   ├── pages/           # FanApp, StaffView
+│   │   └── App.test.tsx     # 35+ frontend component tests
 │   └── package.json
-├── backend/           # FastAPI
-│   ├── main.py
-│   └── requirements.txt
-├── data/              # Stadium data
-│   ├── stadium_kb.md  # Knowledge base
-│   ├── match_timeline.json
-│   ├── graph.json
+├── data/
+│   ├── stadium_kb.md        # Knowledge base (facilities, accessibility info)
+│   ├── match_timeline.json  # Demo event sequence
+│   ├── graph.json           # Step-free navigation graph
 │   └── floorplan.svg
 ├── .env.example
 └── README.md
@@ -135,13 +150,48 @@ stadium-sense/
 
 ---
 
+## Testing
+
+```bash
+# Backend tests
+cd backend
+pytest tests/ -v
+
+# Frontend tests
+cd frontend
+npm test
+```
+
+---
+
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `ANTHROPIC_API_KEY` | Your Anthropic API key |
-| `ANTHROPIC_MODEL` | Model to use (default: claude-sonnet-4-20250514) |
-| `BACKEND_PORT` | Port for backend (default: 8000) |
+| Variable | Description | Default |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Your Anthropic API key | (required) |
+| `ANTHROPIC_MODEL` | Claude model to use | `claude-sonnet-4-5` |
+| `BACKEND_PORT` | Backend server port | `8000` |
+
+---
+
+## Security
+
+- **Rate limiting**: All AI endpoints are rate-limited per IP (10 req/min for Q&A, 15 for routing, 5 for help)
+- **Input validation**: All inputs validated via Pydantic with `min_length`/`max_length` constraints
+- **CORS**: Restricted to `localhost:5173` and `localhost:8000` in development
+- **No sensitive data stored**: No PII collected; help requests are ephemeral in-memory
+- See [SECURITY.md](./SECURITY.md) for responsible disclosure.
+
+---
+
+## Accessibility Standards
+
+StadiumSense is designed to meet **WCAG 2.1 AA** standards:
+- All interactive elements have descriptive `aria-label` attributes
+- High-contrast mode available
+- Text size controls (80%–150%)
+- Screen-reader compatible announcement feed
+- Role attributes (`role="switch"`, `aria-checked`, `aria-expanded`) on all controls
 
 ---
 
@@ -153,4 +203,4 @@ stadium-sense/
 
 ## License
 
-MIT# StadiumSense
+MIT

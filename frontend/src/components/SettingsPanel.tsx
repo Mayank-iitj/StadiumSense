@@ -71,13 +71,14 @@ export default function SettingsPanel({ settings, onUpdate, languages }: Props) 
             <Smartphone className="w-5 h-5 text-blue-600" />
             <h2 className="font-semibold text-slate-800">Vibration Alerts</h2>
           </div>
-          <button aria-label="interactive button"
+          <button
             onClick={() => onUpdate({ haptics: !settings.haptics })}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               settings.haptics ? 'bg-blue-600' : 'bg-slate-300'
             }`}
             role="switch"
             aria-checked={settings.haptics}
+            aria-label="Toggle vibration alerts"
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -98,13 +99,14 @@ export default function SettingsPanel({ settings, onUpdate, languages }: Props) 
             <Contrast className="w-5 h-5 text-blue-600" />
             <h2 className="font-semibold text-slate-800">High Contrast</h2>
           </div>
-          <button aria-label="interactive button"
+          <button
             onClick={() => onUpdate({ highContrast: !settings.highContrast })}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               settings.highContrast ? 'bg-blue-600' : 'bg-slate-300'
             }`}
             role="switch"
             aria-checked={settings.highContrast}
+            aria-label="Toggle high contrast mode"
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${

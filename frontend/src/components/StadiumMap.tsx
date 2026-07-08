@@ -200,10 +200,12 @@ export default function StadiumMap({ section }: Props) {
         </p>
         <div className="grid grid-cols-2 gap-2">
           {QUICK_DESTINATIONS.map(dest => (
-            <button aria-label="interactive button"
+            <button
               key={dest.id}
               onClick={() => handleRouteRequest(dest.id)}
               disabled={loading}
+              aria-label={`Navigate to ${dest.label}`}
+              aria-pressed={selectedDestination === dest.id}
               className={`px-3 py-2 text-left rounded-lg text-sm transition-colors ${
                 selectedDestination === dest.id
                   ? 'bg-blue-100 text-blue-800 border border-blue-300'

@@ -82,7 +82,7 @@ export default function ChatInterface({ language, section }: Props) {
             <p className="text-slate-600 mb-4">Ask me anything about the stadium</p>
             <div className="space-y-2">
               {quickQuestions.map((q, i) => (
-                <button aria-label="interactive button"
+                <button
                   key={i}
                   onClick={() => {
                     setQuestion(q)
@@ -92,6 +92,7 @@ export default function ChatInterface({ language, section }: Props) {
                       form?.requestSubmit()
                     }, 0)
                   }}
+                  aria-label={`Quick question: ${q}`}
                   className="block w-full text-left px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
                 >
                   {q}
@@ -160,9 +161,10 @@ export default function ChatInterface({ language, section }: Props) {
             className="flex-1 px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={loading}
           />
-          <button aria-label="interactive button"
+          <button
             type="submit"
             disabled={!question.trim() || loading}
+            aria-label="Send question to stadium assistant"
             className="px-4 py-3 bg-blue-700 text-white rounded-xl hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-5 h-5" />

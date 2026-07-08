@@ -1,11 +1,16 @@
 """
 StadiumSense Backend - FastAPI + WebSocket
+
+Accessibility copilot for FIFA World Cup 2026 fans.
+Converts live stadium announcements into real-time captions,
+translations, and haptic alerts for deaf/hard-of-hearing fans.
 """
 import asyncio
 import json
 import os
 import time
 from collections import defaultdict
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Optional, Dict, List
 from dotenv import load_dotenv
@@ -23,7 +28,7 @@ from sentence_transformers import SentenceTransformer
 # Load environment
 load_dotenv()
 
-app = FastAPI(title="StadiumSense API", version="1.0.0")
+app = FastAPI(title="StadiumSense API", version="1.0.0")  # lifespan attached below after definition
 api_router = APIRouter(prefix="/api")
 
 # CORS setup: Restrict to localhost and default dev configurations securely
@@ -107,25 +112,19 @@ route_limiter = InMemoryRateLimiter(requests_limit=15, window_seconds=60)
 help_limiter = InMemoryRateLimiter(requests_limit=5, window_seconds=60)
 
 async def check_ask_rate_limit(request: Request):
-    """
-    Endpoint handler for accessibility processing.
-    """
+    """Dependency: enforce per-IP rate limit on the /ask endpoint."""
     client_ip = request.client.host if request.client else "127.0.0.1"
     if not ask_limiter.is_allowed(client_ip):
         raise HTTPException(status_code=429, detail="Too many questions. Please wait a moment.")
 
 async def check_route_rate_limit(request: Request):
-    """
-    Endpoint handler for accessibility processing.
-    """
+    """Dependency: enforce per-IP rate limit on the /route endpoint."""
     client_ip = request.client.host if request.client else "127.0.0.1"
     if not route_limiter.is_allowed(client_ip):
         raise HTTPException(status_code=429, detail="Too many routing requests. Please wait a moment.")
 
 async def check_help_rate_limit(request: Request):
-    """
-    Endpoint handler for accessibility processing.
-    """
+    """Dependency: enforce per-IP rate limit on the /request-help endpoint."""
     client_ip = request.client.host if request.client else "127.0.0.1"
     if not help_limiter.is_allowed(client_ip):
         raise HTTPException(status_code=429, detail="Too many help requests. Please wait a moment.")
@@ -167,19 +166,14 @@ embedding_model = None
 # Initialize
 # =====================
 
-@app.on_event("startup")
-async def init_vector_store():
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Initialize the knowledge base vector store."""
+async def _init_vector_store():
+    """Initialize the FAISS knowledge base vector store on app startup."""
     global kb_index, kb_chunks, kb_embeddings, embedding_model
 
-    # Split KB into chunks
+    # Split KB into chunks by sections
     kb_text = STADIUM_KB
-    # Simple chunking by sections
     kb_chunks = []
-    current_chunk = []
+    current_chunk: list[str] = []
 
     for line in kb_text.split('\n'):
         if line.startswith('## ') or line.startswith('**'):
@@ -206,15 +200,22 @@ async def init_vector_store():
         print(f"Warning: Could not initialize vector store: {e}")
         kb_index = None
 
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+    """FastAPI lifespan: initialize resources on startup, clean up on shutdown."""
+    await _init_vector_store()
+    yield
+    # Shutdown: nothing to clean up currently
+
+# Attach lifespan to app
+app.router.lifespan_context = lifespan
+
 # =====================
 # WebSocket Hub
 # =====================
 
 async def broadcast_to_fans(announcement: dict):
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Broadcast announcement to all connected fan devices."""
+    """Broadcast an announcement to all connected WebSocket fan devices."""
     # Get all sections
     all_sections = list(connected_clients.keys())
     if "all" in connected_clients:
@@ -239,10 +240,7 @@ async def broadcast_to_fans(announcement: dict):
 
 @app.websocket("/ws/{section}/{language}")
 async def websocket_endpoint(websocket: WebSocket, section: str, language: str):
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """WebSocket for fan devices to receive live announcements."""
+    """WebSocket endpoint: fan devices connect here to receive live accessibility announcements."""
     await websocket.accept()
 
     # Add to connections
@@ -402,17 +400,14 @@ def get_fallback_translations(text: str) -> dict:
     }
 
 async def transform_announcement(raw_event: dict) -> dict:
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Transform raw event into accessible announcement using AI and translate it."""
+    """Transform a raw stadium event into an accessible, translated announcement via Claude AI."""
     event_type = raw_event.get("type", "pa_announcement")
     original_text = raw_event.get("original", "")
 
     # Try to use Claude for transformation & translation
     try:
         anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
-        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
 
         if event_type == "match_event":
             prompt = f"""You are an accessibility assistant for a stadium. Transform this match event into accessible, emotional content.
@@ -513,10 +508,7 @@ Respond as JSON:
 # =====================
 
 async def run_demo_timeline():
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Run the demo timeline - plays events one by one."""
+    """Run the pre-recorded demo timeline, broadcasting events sequentially."""
     for item in TIMELINE.get("timeline", []):
         await asyncio.sleep(item.get("delay", 0))
 
@@ -526,7 +518,6 @@ async def run_demo_timeline():
         announcement = await transform_announcement(raw_event)
 
         # Add metadata
-        import time
         announcement["id"] = f"ann_{int(time.time() * 1000)}"
         announcement["timestamp"] = time.time()
 
@@ -542,79 +533,49 @@ async def run_demo_timeline():
 
 @api_router.get("/")
 async def root():
-    """
-    Endpoint handler for accessibility processing.
-    """
+    """Health check endpoint — returns API status."""
     return {"message": "StadiumSense API v1.0", "status": "running"}
 
 @api_router.get("/timeline")
-async def get_timeline(request: Request):
-    """
-    Get the match timeline.
-    """
-    if not rate_limiter.is_allowed(request.client.host): raise HTTPException(status_code=429, detail="Rate limit exceeded")
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Get the demo timeline."""
+async def get_timeline():
+    """Return the full match timeline data used for the demo."""
     return TIMELINE
 
 @api_router.post("/demo/run")
 async def run_demo():
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Start the demo timeline."""
+    """Start the demo timeline as a background task."""
     asyncio.create_task(run_demo_timeline())
     return {"message": "Demo started", "status": "running"}
 
 @api_router.get("/announcements")
 async def get_announcements(limit: int = 20):
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Get recent announcements."""
+    """Return the most recent processed announcements (default: last 20)."""
     return announcements[-limit:]
 
 @api_router.post("/ingest")
 async def ingest_event(event: dict):
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Ingest a raw event and transform it."""
+    """Ingest a raw event, transform it via AI Pipeline A, and broadcast to fans."""
     announcement = await transform_announcement(event)
-
-    import time
     announcement["id"] = f"ann_{int(time.time() * 1000)}"
     announcement["timestamp"] = time.time()
-
     announcements.append(announcement)
     await broadcast_to_fans(announcement)
-
     return announcement
 
 @api_router.post("/broadcast")
 async def broadcast(broadcast: BroadcastRequest):
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Staff broadcasts an announcement."""
+    """Staff composes and broadcasts an accessibility announcement to all fans."""
     event = {
         "type": "staff_broadcast",
         "original": broadcast.message,
         "category": broadcast.category,
         "severity": broadcast.severity
     }
-
     announcement = await transform_announcement(event)
-
-    import time
     announcement["id"] = f"ann_{int(time.time() * 1000)}"
     announcement["timestamp"] = time.time()
-
     announcements.append(announcement)
     await broadcast_to_fans(announcement)
-
     return {"status": "broadcasted", "announcement": announcement}
 
 # =====================
@@ -626,10 +587,7 @@ qa_cache = {}
 
 @api_router.post("/ask", dependencies=[Depends(check_ask_rate_limit)])
 async def ask_question(request: QuestionRequest):
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Grounded Q&A over the stadium knowledge base."""
+    """Pipeline B: RAG Q&A — answer stadium questions grounded in the knowledge base."""
     # Check cache
     cache_key = (request.question.strip().lower(), request.language, request.location)
     if cache_key in qa_cache:
@@ -658,7 +616,7 @@ async def ask_question(request: QuestionRequest):
 
         # Use Claude for answer
         anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
-        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
 
         context = "\n\n---\n\n".join([f"[Chunk {i+1}]: {chunk}" for i, chunk in enumerate(retrieved_chunks)])
 
@@ -758,10 +716,7 @@ def find_step_free_path(start: str, end: str, graph: dict) -> list[dict]:
 
 @api_router.post("/route", dependencies=[Depends(check_route_rate_limit)])
 async def get_route(request: RouteRequest):
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Get step-free navigation route."""
+    """Pipeline C: step-free pathfinding with LLM turn-by-turn narration for wheelchair users."""
     graph = GRAPH
 
     # Find path
@@ -797,7 +752,7 @@ async def get_route(request: RouteRequest):
     # Try to use LLM for narration
     try:
         anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY", ""))
-        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
 
         prompt = f"""Create a simple turn-by-turn navigation in plain language for a wheelchair user.
 
@@ -845,12 +800,8 @@ Create a simple, action-first narration. Respond as JSON:
 
 @api_router.post("/request-help", dependencies=[Depends(check_help_rate_limit)])
 async def request_help(request: RequestHelp):
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Fan requests assistance."""
-    import time
-
+    """Submit an accessibility help request, visible to stadium staff."""
+    # Note: `import time` is at the top-level of this module.
     help_req = {
         "id": f"help_{int(time.time() * 1000)}",
         "reason": request.reason,
@@ -866,10 +817,7 @@ async def request_help(request: RequestHelp):
 
 @api_router.get("/help-requests")
 async def get_help_requests():
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Get all help requests (for staff view)."""
+    """Return all submitted accessibility help requests (staff-facing dashboard)."""
     return help_requests
 
 # =====================
@@ -878,18 +826,12 @@ async def get_help_requests():
 
 @api_router.get("/graph")
 async def get_graph():
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Get stadium graph for map."""
+    """Return the stadium step-free navigation graph (nodes + edges)."""
     return GRAPH
 
 @api_router.get("/kb")
 async def get_kb():
-    """
-    Endpoint handler for accessibility processing.
-    """
-    """Get stadium knowledge base."""
+    """Return the stadium knowledge base markdown and chunked segments."""
     return {"kb": STADIUM_KB, "chunks": kb_chunks}
 
 
@@ -902,9 +844,7 @@ if frontend_dist.exists():
     
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
-        """
-        Endpoint handler for accessibility processing.
-        """
+        """Serve the frontend SPA; fall back to index.html for client-side routing."""
         file_path = frontend_dist / full_path
         if file_path.is_file():
             return FileResponse(file_path)
