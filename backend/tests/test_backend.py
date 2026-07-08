@@ -93,3 +93,9 @@ def test_get_route():
     assert "route" in data
     assert "description" in data
     assert data["step_free"] is True
+
+def test_rate_limiter():
+    from main import InMemoryRateLimiter
+    limiter = InMemoryRateLimiter(1, 10)
+    assert limiter.is_allowed('127.0.0.1') == True
+    assert limiter.is_allowed('127.0.0.1') == False

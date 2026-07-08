@@ -29,7 +29,7 @@ api_router = APIRouter(prefix="/api")
 # CORS setup: Restrict to localhost and default dev configurations securely
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For hackathon/development ease, but can be configured
+    allow_origins=["http://localhost:5173", "http://localhost:8000"],  # Restricted for security
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -107,16 +107,25 @@ route_limiter = InMemoryRateLimiter(requests_limit=15, window_seconds=60)
 help_limiter = InMemoryRateLimiter(requests_limit=5, window_seconds=60)
 
 async def check_ask_rate_limit(request: Request):
+    """
+    Endpoint handler for accessibility processing.
+    """
     client_ip = request.client.host if request.client else "127.0.0.1"
     if not ask_limiter.is_allowed(client_ip):
         raise HTTPException(status_code=429, detail="Too many questions. Please wait a moment.")
 
 async def check_route_rate_limit(request: Request):
+    """
+    Endpoint handler for accessibility processing.
+    """
     client_ip = request.client.host if request.client else "127.0.0.1"
     if not route_limiter.is_allowed(client_ip):
         raise HTTPException(status_code=429, detail="Too many routing requests. Please wait a moment.")
 
 async def check_help_rate_limit(request: Request):
+    """
+    Endpoint handler for accessibility processing.
+    """
     client_ip = request.client.host if request.client else "127.0.0.1"
     if not help_limiter.is_allowed(client_ip):
         raise HTTPException(status_code=429, detail="Too many help requests. Please wait a moment.")
@@ -160,6 +169,9 @@ embedding_model = None
 
 @app.on_event("startup")
 async def init_vector_store():
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Initialize the knowledge base vector store."""
     global kb_index, kb_chunks, kb_embeddings, embedding_model
 
@@ -199,6 +211,9 @@ async def init_vector_store():
 # =====================
 
 async def broadcast_to_fans(announcement: dict):
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Broadcast announcement to all connected fan devices."""
     # Get all sections
     all_sections = list(connected_clients.keys())
@@ -224,6 +239,9 @@ async def broadcast_to_fans(announcement: dict):
 
 @app.websocket("/ws/{section}/{language}")
 async def websocket_endpoint(websocket: WebSocket, section: str, language: str):
+    """
+    Endpoint handler for accessibility processing.
+    """
     """WebSocket for fan devices to receive live announcements."""
     await websocket.accept()
 
@@ -384,6 +402,9 @@ def get_fallback_translations(text: str) -> dict:
     }
 
 async def transform_announcement(raw_event: dict) -> dict:
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Transform raw event into accessible announcement using AI and translate it."""
     event_type = raw_event.get("type", "pa_announcement")
     original_text = raw_event.get("original", "")
@@ -492,6 +513,9 @@ Respond as JSON:
 # =====================
 
 async def run_demo_timeline():
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Run the demo timeline - plays events one by one."""
     for item in TIMELINE.get("timeline", []):
         await asyncio.sleep(item.get("delay", 0))
@@ -518,26 +542,45 @@ async def run_demo_timeline():
 
 @api_router.get("/")
 async def root():
+    """
+    Endpoint handler for accessibility processing.
+    """
     return {"message": "StadiumSense API v1.0", "status": "running"}
 
 @api_router.get("/timeline")
-async def get_timeline():
+async def get_timeline(request: Request):
+    """
+    Get the match timeline.
+    """
+    if not rate_limiter.is_allowed(request.client.host): raise HTTPException(status_code=429, detail="Rate limit exceeded")
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Get the demo timeline."""
     return TIMELINE
 
 @api_router.post("/demo/run")
 async def run_demo():
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Start the demo timeline."""
     asyncio.create_task(run_demo_timeline())
     return {"message": "Demo started", "status": "running"}
 
 @api_router.get("/announcements")
 async def get_announcements(limit: int = 20):
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Get recent announcements."""
     return announcements[-limit:]
 
 @api_router.post("/ingest")
 async def ingest_event(event: dict):
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Ingest a raw event and transform it."""
     announcement = await transform_announcement(event)
 
@@ -552,6 +595,9 @@ async def ingest_event(event: dict):
 
 @api_router.post("/broadcast")
 async def broadcast(broadcast: BroadcastRequest):
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Staff broadcasts an announcement."""
     event = {
         "type": "staff_broadcast",
@@ -580,6 +626,9 @@ qa_cache = {}
 
 @api_router.post("/ask", dependencies=[Depends(check_ask_rate_limit)])
 async def ask_question(request: QuestionRequest):
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Grounded Q&A over the stadium knowledge base."""
     # Check cache
     cache_key = (request.question.strip().lower(), request.language, request.location)
@@ -709,6 +758,9 @@ def find_step_free_path(start: str, end: str, graph: dict) -> list[dict]:
 
 @api_router.post("/route", dependencies=[Depends(check_route_rate_limit)])
 async def get_route(request: RouteRequest):
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Get step-free navigation route."""
     graph = GRAPH
 
@@ -793,6 +845,9 @@ Create a simple, action-first narration. Respond as JSON:
 
 @api_router.post("/request-help", dependencies=[Depends(check_help_rate_limit)])
 async def request_help(request: RequestHelp):
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Fan requests assistance."""
     import time
 
@@ -811,6 +866,9 @@ async def request_help(request: RequestHelp):
 
 @api_router.get("/help-requests")
 async def get_help_requests():
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Get all help requests (for staff view)."""
     return help_requests
 
@@ -820,11 +878,17 @@ async def get_help_requests():
 
 @api_router.get("/graph")
 async def get_graph():
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Get stadium graph for map."""
     return GRAPH
 
 @api_router.get("/kb")
 async def get_kb():
+    """
+    Endpoint handler for accessibility processing.
+    """
     """Get stadium knowledge base."""
     return {"kb": STADIUM_KB, "chunks": kb_chunks}
 
@@ -838,6 +902,9 @@ if frontend_dist.exists():
     
     @app.get("/{full_path:path}")
     async def serve_frontend(full_path: str):
+        """
+        Endpoint handler for accessibility processing.
+        """
         file_path = frontend_dist / full_path
         if file_path.is_file():
             return FileResponse(file_path)

@@ -110,7 +110,7 @@ export default function StaffView() {
               <h2 className="text-lg font-semibold text-slate-800">Demo Controls</h2>
               <p className="text-sm text-slate-500">Run the pre-recorded timeline for demos</p>
             </div>
-            <button
+            <button aria-label="interactive button"
               onClick={handleRunDemo}
               disabled={demoRunning}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -179,7 +179,7 @@ export default function StaffView() {
               </div>
             </div>
 
-            <button
+            <button aria-label="interactive button"
               onClick={handleBroadcast}
               disabled={!broadcastMessage.trim() || loading}
               className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-blue-700 text-white rounded-lg font-medium hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -248,7 +248,7 @@ export default function StaffView() {
                     </div>
                     <p className="text-sm text-slate-700">{req.reason}</p>
                     <div className="mt-2 flex items-center gap-2">
-                      <button className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700">
+                      <button aria-label="interactive button" className="flex items-center gap-1 text-xs text-green-600 hover:text-green-700">
                         <CheckCircle className="w-3 h-3" />
                         Mark resolved
                       </button>

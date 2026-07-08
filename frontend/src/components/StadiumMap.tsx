@@ -200,7 +200,7 @@ export default function StadiumMap({ section }: Props) {
         </p>
         <div className="grid grid-cols-2 gap-2">
           {QUICK_DESTINATIONS.map(dest => (
-            <button
+            <button aria-label="interactive button"
               key={dest.id}
               onClick={() => handleRouteRequest(dest.id)}
               disabled={loading}

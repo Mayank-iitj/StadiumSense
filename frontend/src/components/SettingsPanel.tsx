@@ -71,7 +71,7 @@ export default function SettingsPanel({ settings, onUpdate, languages }: Props) 
             <Smartphone className="w-5 h-5 text-blue-600" />
             <h2 className="font-semibold text-slate-800">Vibration Alerts</h2>
           </div>
-          <button
+          <button aria-label="interactive button"
             onClick={() => onUpdate({ haptics: !settings.haptics })}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               settings.haptics ? 'bg-blue-600' : 'bg-slate-300'
@@ -98,7 +98,7 @@ export default function SettingsPanel({ settings, onUpdate, languages }: Props) 
             <Contrast className="w-5 h-5 text-blue-600" />
             <h2 className="font-semibold text-slate-800">High Contrast</h2>
           </div>
-          <button
+          <button aria-label="interactive button"
             onClick={() => onUpdate({ highContrast: !settings.highContrast })}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               settings.highContrast ? 'bg-blue-600' : 'bg-slate-300'

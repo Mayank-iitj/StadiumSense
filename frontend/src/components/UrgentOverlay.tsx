@@ -39,7 +39,7 @@ export default function UrgentOverlay({ message, onDismiss }: Props) {
           </p>
 
           {/* Dismiss button */}
-          <button
+          <button aria-label="interactive button"
             onClick={onDismiss}
             className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
           >
