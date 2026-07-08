@@ -1,0 +1,143 @@
+{
+  "timeline": [
+    {
+      "delay": 2,
+      "event": {
+        "type": "pa_announcement",
+        "original": "Welcome to the stadium! Today's highly anticipated match is between Brazil and Belgium.",
+        "category": "wayfinding",
+        "severity": "info"
+      }
+    },
+    {
+      "delay": 10,
+      "event": {
+        "type": "match_event",
+        "original": "GOAL! Belgium scores in the 10th minute! Score is now Brazil 0 - 1 Belgium.",
+        "category": "match_event",
+        "severity": "crowd",
+        "team_a": "Brazil",
+        "team_b": "Belgium",
+        "minute": 10,
+        "scorer": "A player from Belgium",
+        "description": "GOAL! Belgium responds with a brilliant strike!"
+      }
+    },
+    {
+      "delay": 20,
+      "event": {
+        "type": "match_event",
+        "original": "GOAL! Belgium scores in the 22th minute! Score is now Brazil 0 - 2 Belgium.",
+        "category": "match_event",
+        "severity": "crowd",
+        "team_a": "Brazil",
+        "team_b": "Belgium",
+        "minute": 22,
+        "scorer": "A player from Belgium",
+        "description": "GOAL! Belgium responds with a brilliant strike!"
+      }
+    },
+    {
+      "delay": 30,
+      "event": {
+        "type": "pa_announcement",
+        "original": "Medical team to Section 114, row 8. Medical team to Section 114.",
+        "category": "medical",
+        "severity": "warning"
+      }
+    },
+    {
+      "delay": 38,
+      "event": {
+        "type": "pa_announcement",
+        "original": "Yellow card shown to a player from Brazil in the 41th minute.",
+        "category": "match_event",
+        "severity": "warning"
+      }
+    },
+    {
+      "delay": 48,
+      "event": {
+        "type": "staff_broadcast",
+        "original": "Please keep aisles clear near Section 114. Move to your seats.",
+        "category": "wayfinding",
+        "severity": "info"
+      }
+    },
+    {
+      "delay": 56,
+      "event": {
+        "type": "match_event",
+        "original": "GOAL! Brazil scores in the 43th minute! Score is now Brazil 1 - 2 Belgium.",
+        "category": "match_event",
+        "severity": "crowd",
+        "team_a": "Brazil",
+        "team_b": "Belgium",
+        "minute": 43,
+        "scorer": "A player from Brazil",
+        "description": "GOAL! Brazil takes their chance!"
+      }
+    },
+    {
+      "delay": 66,
+      "event": {
+        "type": "evacuation_drill",
+        "original": "ATTENTION: This is an evacuation drill. Please proceed calmly to the nearest exit.",
+        "category": "evacuation",
+        "severity": "critical",
+        "location": "East exit"
+      }
+    },
+    {
+      "delay": 74,
+      "event": {
+        "type": "pa_announcement",
+        "original": "Yellow card shown to a player from Belgium in the 47th minute.",
+        "category": "match_event",
+        "severity": "warning"
+      }
+    },
+    {
+      "delay": 84,
+      "event": {
+        "type": "match_event",
+        "original": "GOAL! Brazil scores in the 62th minute! Score is now Brazil 2 - 2 Belgium.",
+        "category": "match_event",
+        "severity": "crowd",
+        "team_a": "Brazil",
+        "team_b": "Belgium",
+        "minute": 62,
+        "scorer": "A player from Brazil",
+        "description": "GOAL! Brazil takes their chance!"
+      }
+    },
+    {
+      "delay": 94,
+      "event": {
+        "type": "match_event",
+        "original": "GOAL! Belgium scores in the 75th minute! Score is now Brazil 2 - 3 Belgium.",
+        "category": "match_event",
+        "severity": "crowd",
+        "team_a": "Brazil",
+        "team_b": "Belgium",
+        "minute": 75,
+        "scorer": "A player from Belgium",
+        "description": "GOAL! Belgium responds with a brilliant strike!"
+      }
+    },
+    {
+      "delay": 104,
+      "event": {
+        "type": "match_event",
+        "original": "GOAL! Brazil scores in the 86th minute! Score is now Brazil 3 - 3 Belgium.",
+        "category": "match_event",
+        "severity": "crowd",
+        "team_a": "Brazil",
+        "team_b": "Belgium",
+        "minute": 86,
+        "scorer": "A player from Brazil",
+        "description": "GOAL! Brazil takes their chance!"
+      }
+    }
+  ]
+}
